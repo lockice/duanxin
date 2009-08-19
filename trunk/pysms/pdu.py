@@ -9,7 +9,7 @@
 
 import re
 
-import SMS_PDU_Modem
+import pdu_modem
 
 
 def is_mobile(mobile):
@@ -39,7 +39,7 @@ if __name__ == '__main__':
         mobile = conv_fmt(sys.argv[2])
     else:
         mobile = conv_fmt(conf.DEBUG_MOBILE)
-    modem = SMS_PDU_Modem.SMS_PDU_Modem('/dev/ttyACM0', 115200)
+    modem = pdu_modem.PDUModem('/dev/ttyACM0', 115200)
     modem.send(mobile, msg.decode('utf-8'))
 
 

@@ -1,8 +1,9 @@
 # -*- encoding: utf-8 -*-
 #
-# File name: SMS_PDU_Modem.py
+# File name: pdu_modem.py
 #
-# Written By: Chen Weiwei (Dave.Chen.ww@gmail.com)
+# Written by: Chen Weiwei (Dave.Chen.ww@gmail.com)
+# Refactoring by: twinsant@gmail.com
 #
 # Code reference: Python sms package, http://pypi.python.org/pypi/sms
 
@@ -11,14 +12,14 @@ import time
 
 import serial
 
-import SMS_PDU_Util
+import pdu_util
 
 
 class ModemError(RuntimeError):
     pass
 
 
-class SMS_PDU_Modem(object):
+class PDUModem(object):
     """Provides access to a gsm modem"""
     
     def __init__(self, dev_id, baud):
@@ -27,7 +28,7 @@ class SMS_PDU_Modem(object):
         self._command('AT')
         # set pdu mode
         self._command('AT+CMGF=0')
-        self.pdu = SMS_PDU_Util.SMS_PDU_Util()
+        self.pdu = pdu_util.PduUtil()
         # find smsc
         smsc_re = re.compile('\+CSCA: "(?P<smsc>.+)"')
         smsc_cmd_out = self._command('AT+CSCA?')
@@ -40,7 +41,7 @@ class SMS_PDU_Modem(object):
 
     def send(self, number, message):
         """Send a SMS message"""
-        commands = self.pdu.MetaInfoToPDU(message, '+86'+str(number), self.smsc, 16)
+        commands = self.pdu.meta_info_to_pdu(message, '+86'+str(number), self.smsc, 16)
         for length, msg in commands:
             self._command('AT+CMGS=%d\r%s\x1A' % (length, msg), flush=False)
             wait = True
@@ -64,7 +65,7 @@ class SMS_PDU_Modem(object):
         for i in range(len(msg_cmd_out)):
             m = msg_item_re.match(msg_cmd_out[i])
             if m is not None:
-                msgs.append(self.pdu.GetPDUMetaInfo(msg_cmd_out[i+1].strip('\r\n')))
+                msgs.append(self.pdu.get_pdu_meta_info(msg_cmd_out[i+1].strip('\r\n')))
                 i += 1
             i += 1
         return msgs
@@ -89,7 +90,7 @@ class SMS_PDU_Modem(object):
 
 
 if __name__ == '__main__':
-    modem = SMS_PDU_Modem(4, 115200) # port='COM5', baud=115200
+    modem = pdu_modem(4, 115200) # port='COM5', baud=115200
     user_choice = raw_input('Send(s)? Read(r)? Quit(q)? ')
     while (user_choice == 's' or user_choice == 'r'):
         if (user_choice == 's'):

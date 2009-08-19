@@ -1,12 +1,12 @@
 # -*- encoding: utf-8 -*-
 #
-# File name: SMS_PDU_MSG.py
+# File name: pdu_msg.py
 #
 # SMS PDU mode message
 #
 # Written By: Chen Weiwei (Dave.Chen.ww@gmail.com)
 
-class SMS_PDU_MSG(object):
+class PDUMsg(object):
     """A PDU format SMS message"""
 
     def __init__(self, smsc, number, PID, DCS, DCS_desc,
