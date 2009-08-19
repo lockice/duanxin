@@ -11,16 +11,21 @@
 
 import pdu_msg
 
-seven_bit_default = u'@£$¥èéùìòÇ\nØø\rÅå\u0394_\u03a6\u0393\u039b\u03a9\u03a0\u03a8\u03a3\u0398\u039e\u20ACÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà'
+seven_bit_default = u'@£$¥èéùìòÇ\nØø\rÅå\
+        \u0394_\u03a6\u0393\u039b\u03a9\u03a0\u03a8\u03a3\u0398\u039e\
+        \u20ACÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡\
+        ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyz\
+        äöñüà'
+
 
 class PDUUtil(object):
-    """SMS PDU encoder and decoder"""
-
+    """SMS PDU encoder and decoder
+    """
     # start of block, utilities : integer, binary, hex, string trans
+
     def hex_to_num(self, hexNumberStr):
         """function to convert a Hex number into a 10-based number"""
         return int(hexNumberStr, 16)
-
 
     def semi_octect_to_string(self, inp):
         """function to convert semi-octets to a string"""
@@ -30,9 +35,9 @@ class PDUUtil(object):
             out += temp[1] + temp[0]
         return out
 
-
     def int_to_bin(self, intValue, bitSize):
         """function to convert an integer into a bit string"""
+
         def i2b(i):
             b = []
             while i:
@@ -42,10 +47,10 @@ class PDUUtil(object):
 
         bin = i2b(intValue)
         if (len(bin) < bitSize):
-            for i in xrange(bitSize - len(bin)): bin.insert(0, 0)
+            for i in xrange(bitSize - len(bin)):
+                bin.insert(0, 0)
 
         return ''.join([str(g) for g in bin])
-
 
     def bin_to_int(self, binStr):
         """function to convert a bit string into an integer"""
@@ -56,7 +61,6 @@ class PDUUtil(object):
                 total += 1
 
         return total
-
 
     def int_to_hex(self, intValue, octetSize):
         """function to covert an integer into a hex octet"""
@@ -70,18 +74,18 @@ class PDUUtil(object):
 
         return hex_str
 
-
     def get7bit(self, character):
         """function to get default 7-bit character index"""
         for i in range(len(seven_bit_default)):
             if (seven_bit_default[i] == character):
                 return i
-        return 0;
+        return 0
 
     # end of block, utilities : integer, binary, hex, string trans
 
 
     # start of block, utilities : DCS
+
     def dcs_type_meaning(self, tp_DCS):
         """function to get descriptions of specified DCS type"""
         tp_DCS_desc = tp_DCS
@@ -131,7 +135,6 @@ class PDUUtil(object):
 
         return tp_DCS_desc
 
-
     def dcs_bits(self, tp_DCS):
         """function to get bits size of specified DCS type"""
         alphabet_size = 7 # default bits size
@@ -149,7 +152,7 @@ class PDUUtil(object):
                 alphabet_size = 16
             elif (msg_waiting_group == 0x30):
                 if ((pom_DCS & 0x4) == 0):
-                    alphabet_size = 8;
+                    alphabet_size = 8
 
         return alphabet_size
 
@@ -157,8 +160,10 @@ class PDUUtil(object):
 
 
     # start of block, utilities : user msg string <=> PDU-coded string trans
+
     def get_user_message(self, pduString, strLength):
-        """function to translate the input PDU-coded string to a "human readable" string
+        """function to translate the input PDU-coded string to a "human
+        readable" string
         for default 7 bit size"""
         byte_str = ''
         octets = []
@@ -190,7 +195,8 @@ class PDUUtil(object):
                 match_count += 1
 
             else:
-                sms_msg += seven_bit_default[self.bin_to_int(septets[i] + rests[i - 1])]
+                sms_msg += seven_bit_default[self.bin_to_int(septets[i] +
+                                                             rests[i - 1])]
                 match_count += 1
 
         if (match_count != strLength):
@@ -198,18 +204,18 @@ class PDUUtil(object):
 
         return sms_msg
 
-
     def get_user_message8(self, pduString, strLength):
-        """function to translate the input PDU-coded string to a "human readable" string
+        """function to translate the input PDU-coded string to a
+        "human readable" string
         for 8 bit size"""
         sms_msg = u''
         for i in range(0, len(pduString), 2):
             sms_msg += unichr(self.hex_to_num(pduString[i:i + 2]))
         return sms_msg
 
-
     def get_user_message16(self, pduString, strLength):
-        """function to translate the input PDU-coded string to a "human readable" string
+        """function to translate the input PDU-coded string to a "human
+        readable" string
         for 16 bit size"""
         sms_msg = u''
         for i in range(0, len(pduString), 4):
@@ -217,7 +223,6 @@ class PDUUtil(object):
         return sms_msg
 
     # end of block, utilities : user msg string <=> PDU-coded string trans
-
 
     def get_pdu_meta_info(self, pduHexString):
         """function to get SMS meta information from PDU string"""
@@ -227,7 +232,7 @@ class PDUUtil(object):
         # SMSC info
         SMSC_info_length = self.hex_to_num(PDUString[0:2])
         SMSC_info = PDUString[2:2 + (SMSC_info_length*2)]
-        SMSC_typeOfAddr = SMSC_info[0:2];
+        SMSC_typeOfAddr = SMSC_info[0:2]
         SMSC_number = SMSC_info[2:2 + (SMSC_info_length*2)]
 
         if (SMSC_info_length != 0):
@@ -246,7 +251,8 @@ class PDUUtil(object):
         SMS_Delivery_1stOctet = PDUString[start:start + 2]
         start += 2
 
-        if ((self.hex_to_num(SMS_Delivery_1stOctet) & 0x03) == 1): # Transmit Msg
+        if ((self.hex_to_num(SMS_Delivery_1stOctet) & 0x03) == 1):
+            # Transmit Msg
             # msg reference
             msg_ref = self.hex_to_num(PDUString[start:start + 2])
             start += 2
@@ -260,7 +266,8 @@ class PDUUtil(object):
             target_typeOfAddr = PDUString[start:start + 2]
             start += 2
 
-            target_number = self.semi_octect_to_string(PDUString[start:start + target_addr_length])
+            target_number = self.semi_octect_to_string(
+                PDUString[start:start + target_addr_length])
 
             if (target_number):
                 if (target_number[-1].upper() == 'F'):
@@ -290,11 +297,14 @@ class PDUUtil(object):
 
             user_data = "Undefined format"
             if (bit_size == 7):
-                user_data = self.get_user_message(PDUString[start:], msg_length)
+                user_data = self.get_user_message(PDUString[start:],
+                                                  msg_length)
             elif (bit_size == 8):
-                user_data = self.get_user_message8(PDUString[start:], msg_length)
+                user_data = self.get_user_message8(PDUString[start:],
+                                                   msg_length)
             elif (bit_size == 16):
-                user_data = self.get_user_message16(PDUString[start:], msg_length)
+                user_data = self.get_user_message16(PDUString[start:],
+                                                    msg_length)
 
             user_data = user_data[:msg_length]
             if (bit_size == 16):
@@ -305,7 +315,8 @@ class PDUUtil(object):
                                           tp_PID, tp_DCS, tp_DCS_desc,
                                           user_data, msg_length, '', False)
 
-        elif ((self.hex_to_num(SMS_Delivery_1stOctet) & 0x03) == 0): # Receive Msg            
+        elif ((self.hex_to_num(SMS_Delivery_1stOctet) & 0x03) == 0):
+            # Receive Msg
             # sender addr
             sender_addr_length = self.hex_to_num(PDUString[start:start + 2])
             if (sender_addr_length % 2 != 0):
@@ -315,7 +326,8 @@ class PDUUtil(object):
             sender_typeOfAddr = PDUString[start:start + 2]
             start += 2
 
-            sender_number = self.semi_octect_to_string(PDUString[start:start + sender_addr_length])
+            sender_number = self.semi_octect_to_string(
+                PDUString[start:start + sender_addr_length])
 
             if (sender_number):
                 if (sender_number[-1].upper() == 'F'):
@@ -334,7 +346,8 @@ class PDUUtil(object):
             start += 2
 
             # time stamp
-            time_stamp = self.semi_octect_to_string(PDUString[start:start + 14])
+            time_stamp = self.semi_octect_to_string(
+                PDUString[start:start + 14])
             year = time_stamp[0:2]
             month = time_stamp[2:4]
             day = time_stamp[4:6]
@@ -362,11 +375,14 @@ class PDUUtil(object):
 
             user_data = "Undefined format"
             if (bit_size == 7):
-                user_data = self.get_user_message(PDUString[start:], msg_length)
+                user_data = self.get_user_message(
+                    PDUString[start:], msg_length)
             elif (bit_size == 8):
-                user_data = self.get_user_message8(PDUString[start:], msg_length)
+                user_data = self.get_user_message8(
+                    PDUString[start:], msg_length)
             elif (bit_size == 16):
-                user_data = self.get_user_message16(PDUString[start:], msg_length)
+                user_data = self.get_user_message16(
+                    PDUString[start:], msg_length)
 
             user_data = user_data[:msg_length]
             if (bit_size == 16):
@@ -381,7 +397,6 @@ class PDUUtil(object):
             out = "Unhandled message"
 
         return out
-
 
     def meta_info_to_pdu(self, userMsg, targetNumber, smscNumber, bitSize):
         """function to translate user message into PDU-coded string
@@ -435,7 +450,8 @@ class PDUUtil(object):
 
             Target_number_length = self.int_to_hex(len(target_number_str), 1)
             if (len(target_number_str) % 2 != 0):
-                target_number_str += 'F' # number length is odd, add trailing 'F'
+                target_number_str += 'F'
+                # number length is odd, add trailing 'F'
 
             Target_number = self.semi_octect_to_string(target_number_str)
 
@@ -465,7 +481,8 @@ class PDUUtil(object):
             for i in range(n):
                 begin = i * max_length_per_msg
                 end = begin + max_length_per_msg
-                if end > len(userMsg): end = len(userMsg)
+                if end > len(userMsg):
+                    end = len(userMsg)
                 user_msgs.append(u'(%d/%d)' % (i+1, n) + userMsg[begin:end])
 
         # deal with each msg
@@ -473,12 +490,13 @@ class PDUUtil(object):
             output = ''
             if (bitSize == 7):
                 user_msg_size = self.int_to_hex(len(msg), 1)
-                octet_temp_1 = '';
-                octet_temp_2 = '';
+                octet_temp_1 = ''
+                octet_temp_2 = ''
                 for i in range(len(msg) + 1):
                     if (i == len(msg)):
                         if (octet_temp_2):
-                            output += self.int_to_hex(self.bin_to_int(octet_temp_2), 1)
+                            output += self.int_to_hex(
+                                self.bin_to_int(octet_temp_2), 1)
                         break
 
                     current = self.int_to_bin(self.get7bit(msg[i]), 7)
@@ -486,7 +504,8 @@ class PDUUtil(object):
                     if (i != 0 and i % 8 != 0):
                         octet_temp_1 = current[7 - i % 8:]
                         octet_current = octet_temp_1 + octet_temp_2
-                        output += self.int_to_hex(self.bin_to_int(octet_current), 1)
+                        output += self.int_to_hex(
+                            self.bin_to_int(octet_current), 1)
                         octet_temp_2 = current[:7 - i % 8]
                     else:
                         octet_temp_2 = current[:7 - i % 8]
@@ -511,4 +530,3 @@ class PDUUtil(object):
             pdu_msgs.append((length, pdu))
 
         return pdu_msgs
-

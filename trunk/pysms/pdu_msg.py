@@ -6,6 +6,7 @@
 #
 # Written By: Chen Weiwei (Dave.Chen.ww@gmail.com)
 
+
 class PDUMsg(object):
     """A PDU format SMS message"""
 
@@ -27,16 +28,18 @@ class PDUMsg(object):
         if self.received:
             out = "SMSC: " + self.smsc + "\nSender: " + self.number +\
                   "\nSend time: " + self.date + "\nTP_PID: " + self.PID +\
-                  "\nTP_DCS: " + self.DCS + "\nTP_DCS-popis: " + self.DCS_desc +\
-                  "\nUser Message: " + self.text + "\nLength: " + str(self.length)
+                  "\nTP_DCS: " + self.DCS + \
+                  "\nTP_DCS-popis: " + self.DCS_desc + \
+                  "\nUser Message: " + self.text + \
+                  "\nLength: " + str(self.length)
         else:
             out = "SMSC: " + self.smsc + "\nTarget: " + self.number +\
                   "\nTP_PID: " + self.PID + "\nTP_DCS: " + self.DCS +\
                   "\nTP_DCS-popis: " + self.DCS_desc +\
-                  "\nUser Message: " + self.text + "\nLength: " + str(self.length)
+                  "\nUser Message: " + self.text + \
+                  "\nLength: " + str(self.length)
 
         return out
 
     def __str__(self):
         return self.__unicode__().encode('utf-8')
-

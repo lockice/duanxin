@@ -20,6 +20,7 @@ def is_mobile(mobile):
             ret = True
     return ret
 
+
 def conv_fmt(mobile):
     if is_mobile(mobile):
         return '+86%s' % mobile
@@ -41,5 +42,3 @@ if __name__ == '__main__':
         mobile = conv_fmt(conf.DEBUG_MOBILE)
     modem = pdu_modem.PDUModem('/dev/ttyACM0', 115200)
     modem.send(mobile, msg.decode('utf-8'))
-
-

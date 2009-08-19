@@ -20,8 +20,9 @@ class ModemError(RuntimeError):
 
 
 class PDUModem(object):
-    """Provides access to a gsm modem"""
-    
+    """Provides access to a gsm modem
+    """
+
     def __init__(self, dev_id, baud):
         self.conn = serial.Serial(dev_id, baud, timeout=1, rtscts=1)
         # make sure modem is OK
@@ -38,10 +39,10 @@ class PDUModem(object):
                 self.smsc = m.group('smsc')
                 break
 
-
     def send(self, number, message):
         """Send a SMS message"""
-        commands = self.pdu.meta_info_to_pdu(message, '+86'+str(number), self.smsc, 16)
+        commands = self.pdu.meta_info_to_pdu(message, '+86'+str(number),
+                                             self.smsc, 16)
         for length, msg in commands:
             self._command('AT+CMGS=%d\r%s\x1A' % (length, msg), flush=False)
             wait = True
@@ -53,7 +54,6 @@ class PDUModem(object):
                         wait = False
                         break
 
-
     def messages(self, list=4):
         """Return received messages, list type:
         0(received unread), 1(received read), 2(stored unsent), 3(stored sent),
@@ -61,15 +61,16 @@ class PDUModem(object):
         """
         msgs = []
         msg_item_re = re.compile('\+CMGL:')
-        msg_cmd_out = self._command('AT+CMGL=%d' % list) # pdu mode, list all msgs
+        # pdu mode, list all msgs
+        msg_cmd_out = self._command('AT+CMGL=%d' % list)
         for i in range(len(msg_cmd_out)):
             m = msg_item_re.match(msg_cmd_out[i])
             if m is not None:
-                msgs.append(self.pdu.get_pdu_meta_info(msg_cmd_out[i+1].strip('\r\n')))
+                msgs.append(self.pdu.get_pdu_meta_info(
+                    msg_cmd_out[i+1].strip('\r\n')))
                 i += 1
             i += 1
         return msgs
-
 
     def _command(self, at_command, flush=True):
         self.conn.write(at_command)
@@ -80,7 +81,6 @@ class PDUModem(object):
             if 'ERROR' in line:
                 raise ModemError(results)
         return results
-
 
     def __del__(self):
         try:
@@ -94,10 +94,12 @@ if __name__ == '__main__':
     user_choice = raw_input('Send(s)? Read(r)? Quit(q)? ')
     while (user_choice == 's' or user_choice == 'r'):
         if (user_choice == 's'):
-            mobile = raw_input('\nInput a mobile phone number (eg. 13812345678): ')
+            mobile = raw_input(
+                '\nInput a mobile phone number (eg. 13812345678): ')
             msg = raw_input('\nInput message: ')
             msg_unicode = msg.decode('cp936')
-            print '\nSending to number: %s, with msg:\n\t%s\n' % (mobile, msg_unicode)
+            print '\nSending to number: %s, with msg:\n\t%s\n' % (
+                mobile, msg_unicode)
             modem.send(mobile, msg_unicode)
             print '\nOK!\n'
         elif (user_choice == 'r'):
