@@ -30,8 +30,7 @@ if __name__ == '__main__':
         mobile = pdu_modem.conv_fmt(conf.DEBUG_MOBILE)
 
     try:
-        # min_timeout=0.1 is better value for my E61 mobile
-        modem = pdu_modem.PDUModem(conf.DEBUG_PORT, 115200, min_timeout=0.1)
-        modem.send(mobile, msg.decode('utf-8'))
+        modem = pdu_modem.PDUModem(conf.DEBUG_PORT, conf.DEBUG_BAUD, conf.DEBUG_MIN_TIMEOUT)
+        modem.send(mobile, msg.decode(conf.DEBUG_ENCODING))
     finally:
         modem.close()
