@@ -1,0 +1,3 @@
+DEBUG_MOBILE='+86138xxxxxxxx'
+DEBUG_PORT = '/dev/ttyACM0'
+DEBUG_ENCODING = 'cp936'
