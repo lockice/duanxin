@@ -74,8 +74,8 @@ class PDUModem(object):
         commands = self.pdu.meta_info_to_pdu(message, conv_fmt(number),
                                              self.smsc, 16)
         for length, msg in commands:
-            results = self._command('AT+CMGS=%d' % length)
-            results = self._command('%s\x1A' % msg)
+            # send msg command: AT+CMGS=<length><CR><pdu><Ctrl-Z>
+            results = self._command('AT+CMGS=%d\r%s\x1A' % (length, msg))
 
     def messages(self, list=4):
         """Return received messages, list type:
@@ -96,7 +96,7 @@ class PDUModem(object):
         return msgs
 
     def _command(self, at_command, flush=True):
-        logging.debug('Command: %s' % at_command)
+        logging.debug('Command: %s' % repr(at_command))
         self.conn.write(at_command)
         if flush:
             self.conn.write('\r')
@@ -106,25 +106,39 @@ class PDUModem(object):
         # it when not got the data we excpect.
         # If pyserial raise the timeoutException we need NOT hack this...
 
-        # It's better when sender checks the results if ok.
+        # Get command execute results.
+        # From 'AT' commands references, all commands will return:
+        #   - 'OK' when executed successfully;
+        #   - 'ERROR' when error occurs;
+        # except for 'AT+CPIN?', 'AT+EXPKEY?', or incoming events.
+        # We do NOT handle these kinds of commands or events, so we can simply
+        # wait for 'OK' or 'ERROR', as the completion of command execution.
         self.total_timeout = self.max_timeout
         read_interval = self.min_timeout
         total_timeout = read_interval
+        results = []
         while total_timeout < self.total_timeout:
             self.conn.setTimeout(total_timeout)
-            results = self.conn.readlines()
+            result = self.conn.readlines()
             logging.debug('Timeout: %.2fs, Result lines: %d' % (
-                total_timeout, len(results)))
-            if len(results) > 0:
-                break
+                total_timeout, len(result)))
+            if (len(result) > 0):
+                logging.debug('Result: %s' % result)
+                results.extend(result)
+                command_executed = False
+                for s in result:
+                    if 'OK' in s:
+                        command_executed = True
+                        break
+                    elif 'ERROR' in s:
+                        raise ModemError(results)
+                if command_executed:
+                    break
             total_timeout += read_interval
         logging.debug('Total time: %.2f' % total_timeout)
         if total_timeout >= self.total_timeout:
             raise TimeoutError(read_interval, self.total_timeout)
 
-        for line in results:
-            if 'ERROR' in line:
-                raise ModemError(results)
         logging.debug('Command results: %s' % results)
         return results
 
@@ -143,7 +157,7 @@ if __name__ == '__main__':
 
     import conf
 
-    modem = PDUModem(conf.DEBUG_PORT, 115200) # port='COM5', baud=115200
+    modem = PDUModem(conf.DEBUG_PORT, conf.DEBUG_BAUD, conf.DEBUG_MIN_TIMEOUT)
     try:
         user_choice = raw_input('Send(s)? Read(r)? Quit(q)?\r\n')
         while (user_choice == 's' or user_choice == 'r'):
