@@ -152,6 +152,99 @@ class PDUModem(object):
         self.conn.close()
 
 
+# TODO: It will be better designing a class named Command which compose
+# commands and validate the results
+def cv_pass(result, results):
+    return True
+
+
+def cv_normal(result, results):
+    # Get command execute results.
+    # From 'AT' commands references, all commands will return:
+    #   - 'OK' when executed successfully;
+    #   - 'ERROR' when error occurs;
+    # except for 'AT+CPIN?', 'AT+EXPKEY?', or incoming events.
+    # We do NOT handle these kinds of commands or events, so we can simply
+    # wait for 'OK' or 'ERROR', as the completion of command execution.
+    for s in result:
+        if 'OK' in s:
+            return True
+        elif 'ERROR' in s:
+            raise ModemError(results)
+    return False
+
+
+class E61(PDUModem):
+    def send(self, number, message):
+        """Send a SMS message"""
+        commands = self.pdu.meta_info_to_pdu(message, conv_fmt(number),
+                                             self.smsc, 16)
+        for length, msg in commands:
+            # send msg command: AT+CMGS=<length><CR><pdu><Ctrl-Z>
+            # Nokia E61 need send this command seperately
+            results = self._command('AT+CMGS=%d\r' % length,
+                                    command_validator=cv_pass)
+            results = self._command('%s\x1A' % msg,
+                                   command_validator=cv_normal)
+
+    def _command(self, at_command, flush=True, command_validator=cv_normal):
+        # Write
+        self._write_comand(at_command, flush)
+
+        # Read
+        return self._read_results(self.min_timeout, self.max_timeout,
+                                  command_validator)
+
+    def _write_comand(self, at_command, flush=True):
+        logging.debug('Command: %s' % repr(at_command))
+
+        self.conn.write(at_command)
+        if flush:
+            self.conn.write('\r')
+
+    def _read_results(self, min_timeout, max_timeout,
+                      command_validator=cv_normal):
+        # Too small timeout will return immediately and got no data.
+        # So here we should keep a short interval for reading and increase
+        # it when not got the data we excpect.
+        # If pyserial raise the timeoutException we need NOT hack this...
+        total_timeout = max_timeout
+        read_interval = min_timeout
+        interval_timeout = read_interval
+        results = []
+        while interval_timeout < total_timeout:
+            self.conn.setTimeout(interval_timeout)
+            result = self.conn.readlines()
+            logging.debug('Timeout: %.2fs, Result lines: %d' % (
+                interval_timeout, len(result)))
+            if (len(result) > 0):
+                logging.debug('Result: %s' % result)
+                results.extend(result)
+                command_executed = command_validator(result, results)
+                if command_executed:
+                    break
+            interval_timeout += read_interval
+        logging.debug('Total time: %.2f' % interval_timeout)
+        self.results_ok_time = interval_timeout
+        if interval_timeout >= total_timeout:
+            raise TimeoutError(read_interval, total_timeout)
+
+        logging.debug('Command results: %s' % results)
+        return results
+
+    def benchmark(self, max_chars=1):
+        import conf
+
+        logging.info('Benchmark SMS speed:')
+        c = u'中'
+        number = conf.DEBUG_MOBILE
+        for i in xrange(max_chars):
+            message = c
+            for j in xrange(i):
+                message += c
+            self.send(number, message)
+            logging.info('%s sent: %.2f' % (message, self.results_ok_time))
+
 if __name__ == '__main__':
     import sys
 
