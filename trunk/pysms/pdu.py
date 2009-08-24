@@ -12,12 +12,18 @@ import re
 import pdu_modem
 
 
-if __name__ == '__main__':
+_debug = True
+
+def main():
     import conf
     import sys
     import logging
 
-    logging.basicConfig(level=logging.DEBUG,
+    if _debug:
+        level = logging.DEBUG
+    else:
+        level = logging.INFO
+    logging.basicConfig(level=level,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logging.debug('Debug messages ready.')
     if len(sys.argv) < 2:
@@ -29,8 +35,31 @@ if __name__ == '__main__':
     else:
         mobile = pdu_modem.conv_fmt(conf.DEBUG_MOBILE)
 
+    modem = None
     try:
-        modem = pdu_modem.PDUModem(conf.DEBUG_PORT, conf.DEBUG_BAUD, conf.DEBUG_MIN_TIMEOUT)
+        modem = pdu_modem.E61(conf.DEBUG_PORT, conf.DEBUG_BAUD, conf.DEBUG_MIN_TIMEOUT)
         modem.send(mobile, msg.decode(conf.DEBUG_ENCODING))
     finally:
-        modem.close()
+        if modem:
+            modem.close()
+
+def bench():
+    import conf
+    import sys
+    import logging
+
+    level = logging.INFO
+    logging.basicConfig(level=level,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    mobile = pdu_modem.conv_fmt(conf.DEBUG_MOBILE)
+
+    modem = None
+    try:
+        modem = pdu_modem.E61(conf.DEBUG_PORT, conf.DEBUG_BAUD, conf.DEBUG_MIN_TIMEOUT)
+        modem.benchmark(10)
+    finally:
+        if modem:
+            modem.close()
+
+if __name__ == '__main__':
+    main()
