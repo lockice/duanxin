@@ -37,7 +37,8 @@ def main():
 
     modem = None
     try:
-        modem = pdu_modem.E61(conf.DEBUG_PORT, conf.DEBUG_BAUD, conf.DEBUG_MIN_TIMEOUT)
+        modem = pdu_modem.E61(conf.DEBUG_PORT, conf.DEBUG_BAUD,
+                conf.DEBUG_MIN_TIMEOUT, conf.DEBUG_MAX_TIMEOUT)
         modem.send(mobile, msg.decode(conf.DEBUG_ENCODING))
     finally:
         if modem:
@@ -55,7 +56,8 @@ def bench():
 
     modem = None
     try:
-        modem = pdu_modem.E61(conf.DEBUG_PORT, conf.DEBUG_BAUD, conf.DEBUG_MIN_TIMEOUT)
+        modem = pdu_modem.E61(conf.DEBUG_PORT, conf.DEBUG_BAUD,
+                conf.DEBUG_MIN_TIMEOUT, conf.DEBUG_MAX_TIMEOUT)
         modem.benchmark(10)
     finally:
         if modem:

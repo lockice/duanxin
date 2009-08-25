@@ -118,10 +118,10 @@ class PDUModem(object):
         total_timeout = read_interval
         results = []
         while total_timeout < self.total_timeout:
-            self.conn.setTimeout(total_timeout)
+            self.conn.setTimeout(read_interval)
             result = self.conn.readlines()
             logging.debug('Timeout: %.2fs, Result lines: %d' % (
-                total_timeout, len(result)))
+                read_interval, len(result)))
             if (len(result) > 0):
                 logging.debug('Result: %s' % result)
                 results.extend(result)
@@ -134,6 +134,7 @@ class PDUModem(object):
                         raise ModemError(results)
                 if command_executed:
                     break
+            read_interval += self.min_timeout
             total_timeout += read_interval
         logging.debug('Total time: %.2f' % total_timeout)
         if total_timeout >= self.total_timeout:
@@ -213,16 +214,17 @@ class E61(PDUModem):
         interval_timeout = read_interval
         results = []
         while interval_timeout < total_timeout:
-            self.conn.setTimeout(interval_timeout)
+            self.conn.setTimeout(read_interval)
             result = self.conn.readlines()
             logging.debug('Timeout: %.2fs, Result lines: %d' % (
-                interval_timeout, len(result)))
+                read_interval, len(result)))
             if (len(result) > 0):
                 logging.debug('Result: %s' % result)
                 results.extend(result)
                 command_executed = command_validator(result, results)
                 if command_executed:
                     break
+            read_interval += min_timeout
             interval_timeout += read_interval
         logging.debug('Total time: %.2f' % interval_timeout)
         self.results_ok_time = interval_timeout
@@ -250,7 +252,8 @@ if __name__ == '__main__':
 
     import conf
 
-    modem = PDUModem(conf.DEBUG_PORT, conf.DEBUG_BAUD, conf.DEBUG_MIN_TIMEOUT)
+    modem = PDUModem(conf.DEBUG_PORT, conf.DEBUG_BAUD,
+            conf.DEBUG_MIN_TIMEOUT, conf.DEBUG_MAX_TIMEOUT)
     try:
         user_choice = raw_input('Send(s)? Read(r)? Quit(q)?\r\n')
         while (user_choice == 's' or user_choice == 'r'):
