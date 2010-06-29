@@ -20,8 +20,8 @@ import pdu_util
 def is_mobile(mobile):
     ret = False
     if len(mobile) == 11:
-        # 130-139 150-153 155-159 186 188 189
-        if re.match(r'1(3[0-9]|5[0-35-9]|8[689])\d{8}', mobile):
+        # 130-139 150-153 155-159 186-189
+        if re.match(r'1(3[0-9]|5[0-35-9]|8[6-9])\d{8}', mobile):
             ret = True
     return ret
 
